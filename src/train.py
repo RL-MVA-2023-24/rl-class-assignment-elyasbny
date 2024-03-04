@@ -80,7 +80,7 @@ class ProjectAgent:
         self.model.load_state_dict(torch.load('model.pt', map_location=device))
         self.model.eval()
 
-    def __init__(self, config, model):
+    def __init__(self):
         device = "cuda" if next(model.parameters()).is_cuda else "cpu"
         self.gamma = config['gamma']
         self.batch_size = config['batch_size']
@@ -215,5 +215,5 @@ config = {'nb_actions': env.action_space.n,
               'batch_size': 800,
               }
 model = DQN(env.observation_space.shape[0],env.action_space.n)
-agent = ProjectAgent(config, model)
+agent = ProjectAgent()
 #ep_length = agent.train(env, 200)
