@@ -23,7 +23,6 @@ env = TimeLimit(
 )  # The time wrapper limits the number of steps in an episode at 200.
 # Now is the floor is yours to implement the agent and train it.
 
-
 # You have to implement your own agent.
 # Don't modify the methods names and signatures, but you can add methods.
 # ENJOY!
@@ -54,29 +53,32 @@ def greedy_action(network, state):
 class DQN(nn.Module):
     def __init__(self, n_observations, n_actions):
         super(DQN, self).__init__()
-        self.layer1 = nn.Linear(n_observations, 128)
-        self.layer2 = nn.Linear(128, 128)
-        self.layer3 = nn.Linear(128, 256)
-        self.layer4 = nn.Linear(256, 128)
-        self.layer5 = nn.Linear(128, n_actions)
+        self.layer1 = nn.Linear(n_observations, 256)
+        self.layer2 = nn.Linear(256, 256)
+        self.layer3 = nn.Linear(256, 256)
+        self.layer4 = nn.Linear(256, 256)
+        self.layer5 = nn.Linear(256, 256)
+        self.layer6 = nn.Linear(256, n_actions)
     def forward(self, x):
         x = F.relu(self.layer1(x))
         x = F.relu(self.layer2(x))
         x = F.relu(self.layer3(x))
         x = F.relu(self.layer4(x))
-        return self.layer5(x)
+        x = F.relu(self.layer5(x))
+        return self.layer6(x)
     
 class ProjectAgent:
     def act(self, observation, use_random=False):
         Q = self.model(torch.Tensor(observation).unsqueeze(0).to(device))
         return Q.argmax().item()
 
-    def save(self, path):
+    def save(self):
         path='model.pt'
         torch.save(self.model.state_dict(), path)
 
     def load(self):
         self.model.load_state_dict(torch.load('model.pt', map_location=device))
+        self.model.eval()
 
     def __init__(self, config, model):
         device = "cuda" if next(model.parameters()).is_cuda else "cpu"
@@ -120,6 +122,7 @@ class ProjectAgent:
         state, _ = env.reset()
         epsilon = self.epsilon_max
         step = 0
+        best_score = -1
         while episode < max_episode:
             # update epsilon
             if step > self.epsilon_delay:
@@ -165,14 +168,17 @@ class ProjectAgent:
 
                 episode_return.append(episode_cum_reward)
                 episode_cum_reward = 0
+                
+                if score > best_score:
+                    best_score = score
+                    self.save()
 
             else:
                 state = next_state
-        if score > best_score:
-            best_score = score
-            self.save()
-        return episode_return
 
+            
+        return episode_return
+'''
     if __name__ == "__main__":
          config = {'nb_actions': env.action_space.n,
               'learning_rate': 0.001,
@@ -189,12 +195,25 @@ class ProjectAgent:
               'use_Huber_loss': True,
               'batch_size': 800,
               }
-         
-         model = DQN(env.shape[0],env.action_space.n)
-         train(env, 200)
-
-
-
-
-
-
+         model = DQN(env.observation_space.shape[0],env.action_space.n)
+         print(env)
+         ProjectAgent.train(env, 200)
+'''
+config = {'nb_actions': env.action_space.n,
+              'learning_rate': 0.001,
+              'gamma': 0.95,
+              'buffer_size': 100000,
+              'epsilon_min': 0.02,
+              'epsilon_max': 1.,
+              'epsilon_decay_period': 20000,
+              'epsilon_delay_decay': 500,
+              'gradient_steps': 3,
+              'update_target_strategy': 'replace',
+              'update_target_freq': 400,
+              'update_target_tau': 0.005,
+              'use_Huber_loss': True,
+              'batch_size': 800,
+              }
+model = DQN(env.observation_space.shape[0],env.action_space.n)
+agent = ProjectAgent(config, model)
+#ep_length = agent.train(env, 200)
