@@ -206,8 +206,8 @@ config = {'nb_actions': env.action_space.n,
               'epsilon_min': 0.02,
               'epsilon_max': 1.,
               'epsilon_decay_period': 20000,
-              'epsilon_delay_decay': 500,
-              'gradient_steps': 3,
+              'epsilon_delay_decay': 400, #500
+              'gradient_steps': 2, #3
               'update_target_strategy': 'replace',
               'update_target_freq': 400,
               'update_target_tau': 0.005,
@@ -216,4 +216,4 @@ config = {'nb_actions': env.action_space.n,
               }
 model = DQN(env.observation_space.shape[0],env.action_space.n)
 agent = ProjectAgent()
-#ep_length = agent.train(env, 200)
+# ep_length = agent.train(env, 200)
